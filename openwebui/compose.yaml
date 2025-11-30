@@ -1,0 +1,15 @@
+---
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - target: 8080
+        published: 80
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: volume
+        source: open-webui
+        target: /app/backend/data
+volumes:
+  open-webui:
