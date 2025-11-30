@@ -5,13 +5,13 @@ services:
     container_name: ollama
     ports:
       - target: 11434
-      published: 11434
-      protocol: tcp
-      mode: host
+        published: 11434
+        protocol: tcp
+        mode: host
     volumes:
       - type: volume
-      source: ollama
-      target: /root/.ollama
+        source: ollama
+        target: /root/.ollama
     deploy:
       resources:
         reservations:
@@ -22,4 +22,5 @@ services:
     restart: unless-stopped
 
 volumes:
+
   ollama:
