@@ -1,1 +1,1 @@
-# ollama-gpu-docker
+# Container templates
