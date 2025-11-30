@@ -1,0 +1,25 @@
+---
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - target: 11434
+      published: 11434
+      protocol: tcp
+      mode: host
+    volumes:
+      - type: volume
+      source: ollama
+      target: /root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  ollama:
