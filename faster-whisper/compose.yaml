@@ -1,0 +1,35 @@
+---
+services:
+  faster-whisper:
+    image: lscr.io/linuxserver/faster-whisper:3.0.2-gpu
+    container_name: faster-whisper
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: ES
+      WHISPER_MODEL: turbo
+      # WHISPER_MODEL: tiny-int8
+      # WHISPER_MODEL: tiny-int8
+      # WHISPER_MODEL: tiny-int8
+      # WHISPER_MODEL: tiny-int8
+      WHISPER_BEAM: 3
+      WHISPER_LANG: es
+      #LOCAL_ONLY: #optional
+    ports:
+      - target: 10300
+        published: 10300
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: volume
+        source: faster-whisper-config
+        target: /config
+      - type: volume
+        source: faster-whisper-data
+        target: /data
+
+    restart: unless-stopped
+
+volumes:
+  faster-whisper-config:
+  faster-whisper-data:
