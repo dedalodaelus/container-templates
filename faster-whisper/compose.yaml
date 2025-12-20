@@ -27,9 +27,16 @@ services:
       - type: volume
         source: faster-whisper-data
         target: /data
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
 
 volumes:
   faster-whisper-config:
+
   faster-whisper-data:
