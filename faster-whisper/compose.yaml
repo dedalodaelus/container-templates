@@ -38,17 +38,25 @@ services:
     restart: unless-stopped
   whisper-es-converter:
     image: python:3.12-slim
-    profiles: ["convert"]
     container_name: whisper-es-converter
     environment:
       HF_HUB_CACHE: /hf-cache
     volumes:
-      - faster-whisper-config:/hf-cache
-      - faster-whisper-data:/output
+      - type: volume
+        source: faster-whisper-config
+        target: /hf-cache
+      - type: volume
+        source: faster-whisper-data
+        target: /output
     command:
       - /bin/sh
       - -ec
       - |
+        if [ -f /output/whisper-large-v3-turbo-es-int8/model.bin ]; then
+          echo "El modelo CTranslate2 ya está convertido."
+          exit 0
+        fi
+
         python -m pip install --no-cache-dir \
           --index-url https://download.pytorch.org/whl/cpu \
           torch
@@ -64,6 +72,9 @@ services:
           --output_dir /output/whisper-large-v3-turbo-es-int8 \
           --copy_files tokenizer.json preprocessor_config.json \
           --quantization int8_float16
+
+        test -f /output/whisper-large-v3-turbo-es-int8/model.bin
+        echo "Conversión terminada correctamente."
     restart: "no"
 volumes:
   faster-whisper-config:
