@@ -8,7 +8,7 @@ services:
       PGID: 1000
       TZ: ES
       WHISPER_MODEL: turbo
-      # WHISPER_MODEL: adriszmar/whisper-large-v3-turbo-es
+      # WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
@@ -36,7 +36,35 @@ services:
               count: all
               capabilities: [gpu]
     restart: unless-stopped
+  whisper-es-converter:
+    image: python:3.12-slim
+    profiles: ["convert"]
+    container_name: whisper-es-converter
+    environment:
+      HF_HUB_CACHE: /hf-cache
+    volumes:
+      - faster-whisper-config:/hf-cache
+      - faster-whisper-data:/output
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        python -m pip install --no-cache-dir \
+          --index-url https://download.pytorch.org/whl/cpu \
+          torch
 
+        python -m pip install --no-cache-dir \
+          ctranslate2==4.8.1 \
+          transformers==4.52.4 \
+          sentencepiece \
+          safetensors
+
+        ct2-transformers-converter \
+          --model adriszmar/whisper-large-v3-turbo-es \
+          --output_dir /output/whisper-large-v3-turbo-es-int8 \
+          --copy_files tokenizer.json preprocessor_config.json \
+          --quantization int8_float16
+    restart: "no"
 volumes:
   faster-whisper-config:
 
