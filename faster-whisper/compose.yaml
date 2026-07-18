@@ -7,8 +7,8 @@ services:
       PUID: 1000
       PGID: 1000
       TZ: ES
-      WHISPER_MODEL: turbo
-      # WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
+      # WHISPER_MODEL: turbo
+      WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
