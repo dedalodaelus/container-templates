@@ -1,13 +1,14 @@
 ---
 services:
   faster-whisper:
-    image: lscr.io/linuxserver/faster-whisper:3.0.2-gpu
+    image: lscr.io/linuxserver/faster-whisper:3.5.0-gpu
     container_name: faster-whisper
     environment:
       PUID: 1000
       PGID: 1000
       TZ: ES
-      WHISPER_MODEL: turbo
+      # WHISPER_MODEL: turbo
+      WHISPER_MODEL: adriszmar/whisper-large-v3-turbo-es
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
       # WHISPER_MODEL: tiny-int8
