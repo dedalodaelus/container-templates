@@ -1,0 +1,231 @@
+---
+services:
+  llama-cpp:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda13
+    container_name: llama-cpp
+
+    environment:
+      # -----------------------------------------------------------------------
+      # Model / Hugging Face
+      # -----------------------------------------------------------------------
+
+      # Persistent llama.cpp download cache.
+      LLAMA_CACHE: /cache
+
+      # Official llama.cpp GGUF repository for gpt-oss-20b.
+      LLAMA_ARG_HF_REPO: ${LLAMA_ARG_HF_REPO:-ggml-org/gpt-oss-20b-GGUF}
+
+      # Native MXFP4 model.
+      LLAMA_ARG_HF_FILE: ${LLAMA_ARG_HF_FILE:-gpt-oss-20b-mxfp4.gguf}
+
+      # Model names exposed through the OpenAI-compatible API.
+      LLAMA_ARG_ALIAS: ${LLAMA_ARG_ALIAS:-gpt-oss-20b,gpt-oss:20b}
+
+      # Set this externally only if a private Hugging Face repository is used.
+      # HF_TOKEN: ${HF_TOKEN}
+
+
+      # -----------------------------------------------------------------------
+      # Server
+      # -----------------------------------------------------------------------
+
+      LLAMA_ARG_HOST: ${LLAMA_ARG_HOST:-0.0.0.0}
+      LLAMA_ARG_PORT: ${LLAMA_ARG_PORT:-8080}
+
+      # Web UI is unnecessary for Home Assistant but can be enabled for testing.
+      LLAMA_ARG_UI: ${LLAMA_ARG_UI:-false}
+
+      # OpenAI API path prefix. Empty = normal /v1/... endpoints.
+      LLAMA_ARG_API_PREFIX: ${LLAMA_ARG_API_PREFIX:-}
+
+      # Server timeout in seconds.
+      LLAMA_ARG_TIMEOUT: ${LLAMA_ARG_TIMEOUT:-3600}
+
+      # HTTP worker threads. -1 lets llama.cpp decide.
+      LLAMA_ARG_THREADS_HTTP: ${LLAMA_ARG_THREADS_HTTP:--1}
+
+      # Expose /metrics.
+      LLAMA_ARG_ENDPOINT_METRICS: ${LLAMA_ARG_ENDPOINT_METRICS:-true}
+
+      # Expose slot monitoring.
+      LLAMA_ARG_ENDPOINT_SLOTS: ${LLAMA_ARG_ENDPOINT_SLOTS:-true}
+
+      # Do not allow runtime modification of global properties by default.
+      LLAMA_ARG_ENDPOINT_PROPS: ${LLAMA_ARG_ENDPOINT_PROPS:-false}
+
+
+      # -----------------------------------------------------------------------
+      # Context / generation
+      # -----------------------------------------------------------------------
+
+      # Home Assistant already needs >5600 tokens in your current setup.
+      LLAMA_ARG_CTX_SIZE: ${LLAMA_ARG_CTX_SIZE:-8192}
+
+      # Maximum generated tokens if the client does not override it.
+      LLAMA_ARG_N_PREDICT: ${LLAMA_ARG_N_PREDICT:-512}
+
+      # One Home Assistant voice request at a time saves memory.
+      LLAMA_ARG_N_PARALLEL: ${LLAMA_ARG_N_PARALLEL:-1}
+
+      # CPU threads used during token generation.
+      # i7-6700: start with the four physical cores.
+      LLAMA_ARG_THREADS: ${LLAMA_ARG_THREADS:-4}
+
+      # Logical batch size.
+      LLAMA_ARG_BATCH: ${LLAMA_ARG_BATCH:-1024}
+
+      # Physical micro-batch size.
+      LLAMA_ARG_UBATCH: ${LLAMA_ARG_UBATCH:-512}
+
+      # Flash Attention.
+      LLAMA_ARG_FLASH_ATTN: ${LLAMA_ARG_FLASH_ATTN:-on}
+
+      # Continuous batching.
+      LLAMA_ARG_CONT_BATCHING: ${LLAMA_ARG_CONT_BATCHING:-true}
+
+      # Internal performance timings.
+      LLAMA_ARG_PERF: ${LLAMA_ARG_PERF:-true}
+
+
+      # -----------------------------------------------------------------------
+      # RTX A2000 / CUDA / CPU+GPU offload
+      # -----------------------------------------------------------------------
+
+      CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}
+
+      # Try to place every normal layer on CUDA.
+      # MoE expert weights are controlled separately below.
+      LLAMA_ARG_N_GPU_LAYERS: ${LLAMA_ARG_N_GPU_LAYERS:-all}
+
+      # IMPORTANT for gpt-oss-20b on the A2000 6 GB.
+      #
+      # Keep the experts of the first N MoE layers in RAM/CPU while the
+      # remaining suitable parts stay on the GPU.
+      #
+      # Start at 20:
+      #   22 = less VRAM, slower
+      #   20 = recommended starting point for this machine
+      #   18 = more GPU use, potentially faster
+      #   16 = faster if it fits, but much more likely to exceed 6 GB
+      LLAMA_ARG_N_CPU_MOE: ${LLAMA_ARG_N_CPU_MOE:-20}
+
+      # false = do not force ALL MoE weights onto CPU.
+      LLAMA_ARG_CPU_MOE: ${LLAMA_ARG_CPU_MOE:-false}
+
+      # Single GPU.
+      LLAMA_ARG_SPLIT_MODE: ${LLAMA_ARG_SPLIT_MODE:-none}
+      LLAMA_ARG_MAIN_GPU: ${LLAMA_ARG_MAIN_GPU:-0}
+
+      # Allow llama.cpp's memory fitting logic.
+      LLAMA_ARG_FIT: ${LLAMA_ARG_FIT:-on}
+
+      # Desired VRAM safety margin in MiB.
+      LLAMA_ARG_FIT_TARGET: ${LLAMA_ARG_FIT_TARGET:-512}
+
+      # Never let automatic fitting reduce context below this value.
+      LLAMA_ARG_FIT_CTX: ${LLAMA_ARG_FIT_CTX:-8192}
+
+
+      # -----------------------------------------------------------------------
+      # KV cache / memory
+      # -----------------------------------------------------------------------
+
+      # Keep KV cache on GPU.
+      LLAMA_ARG_KV_OFFLOAD: ${LLAMA_ARG_KV_OFFLOAD:-true}
+
+      # Maximum-quality defaults.
+      # q8_0 can be tried later if more VRAM must be recovered.
+      LLAMA_ARG_CACHE_TYPE_K: ${LLAMA_ARG_CACHE_TYPE_K:-f16}
+      LLAMA_ARG_CACHE_TYPE_V: ${LLAMA_ARG_CACHE_TYPE_V:-f16}
+
+      # Let llama.cpp use its normal optimal model-loading mechanism.
+      LLAMA_ARG_LOAD_MODE: ${LLAMA_ARG_LOAD_MODE:-auto}
+
+      # Weight repacking.
+      LLAMA_ARG_REPACK: ${LLAMA_ARG_REPACK:-true}
+
+
+      # -----------------------------------------------------------------------
+      # Prompt cache
+      # -----------------------------------------------------------------------
+
+      # Particularly useful for Home Assistant because most of the ~5.6K-token
+      # system prompt/tool definitions are repeated between requests.
+      LLAMA_ARG_CACHE_PROMPT: ${LLAMA_ARG_CACHE_PROMPT:-true}
+
+      # Prompt/context cache RAM limit in MiB.
+      LLAMA_ARG_CACHE_RAM: ${LLAMA_ARG_CACHE_RAM:-4096}
+
+      # Use one unified KV buffer.
+      LLAMA_ARG_KV_UNIFIED: ${LLAMA_ARG_KV_UNIFIED:-true}
+
+      # Keep idle slots in prompt cache.
+      LLAMA_ARG_CACHE_IDLE_SLOTS: ${LLAMA_ARG_CACHE_IDLE_SLOTS:-true}
+
+      # Context checkpoint tuning.
+      LLAMA_ARG_CTX_CHECKPOINTS: ${LLAMA_ARG_CTX_CHECKPOINTS:-32}
+      LLAMA_ARG_CHECKPOINT_MIN_SPACING_NT: ${LLAMA_ARG_CHECKPOINT_MIN_SPACING_NT:-8192}
+
+
+      # -----------------------------------------------------------------------
+      # Chat / tool calling / gpt-oss
+      # -----------------------------------------------------------------------
+
+      # Required/recommended for structured chat templates and tool calling.
+      LLAMA_ARG_JINJA: ${LLAMA_ARG_JINJA:-true}
+
+      # IMPORTANT: do not return tool calls as ordinary message.content.
+      LLAMA_ARG_SKIP_CHAT_PARSING: ${LLAMA_ARG_SKIP_CHAT_PARSING:-false}
+
+      # Automatically use the reasoning behavior defined by the model template.
+      LLAMA_ARG_REASONING: ${LLAMA_ARG_REASONING:-auto}
+
+      # gpt-oss supports low / medium / high.
+      # Low is a good starting point for a latency-sensitive voice assistant.
+      LLAMA_ARG_CHAT_TEMPLATE_KWARGS: '${LLAMA_ARG_CHAT_TEMPLATE_KWARGS:-{"reasoning_effort":"low"}}'
+
+      # Preserve normal assistant-prefill behavior.
+      LLAMA_ARG_PREFILL_ASSISTANT: ${LLAMA_ARG_PREFILL_ASSISTANT:-true}
+
+
+      # -----------------------------------------------------------------------
+      # Logging
+      # -----------------------------------------------------------------------
+
+      # 0 generic
+      # 1 error
+      # 2 warning
+      # 3 info
+      # 4 trace
+      # 5 debug
+      LLAMA_ARG_LOG_VERBOSITY: ${LLAMA_ARG_LOG_VERBOSITY:-3}
+
+      LLAMA_ARG_LOG_TIMESTAMPS: ${LLAMA_ARG_LOG_TIMESTAMPS:-true}
+      LLAMA_ARG_LOG_COLORS: ${LLAMA_ARG_LOG_COLORS:-auto}
+
+      # false is required for the first run so the GGUF can be downloaded.
+      LLAMA_ARG_OFFLINE: ${LLAMA_ARG_OFFLINE:-false}
+
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - type: volume
+        source: llama-cpp-cache
+        target: /cache
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    restart: unless-stopped
+
+volumes:
+  llama-cpp-cache:
