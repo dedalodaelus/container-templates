@@ -200,7 +200,17 @@ services:
       # 5 debug
       LLAMA_ARG_LOG_VERBOSITY: ${LLAMA_ARG_LOG_VERBOSITY:-3}
 
+      # Optional file for persistent llama.cpp logs.
+      # Leave empty to log only to the container stdout/stderr.
+      LLAMA_ARG_LOG_FILE: ${LLAMA_ARG_LOG_FILE:-}
+
+      # Include the component/source prefix in each log entry.
+      LLAMA_ARG_LOG_PREFIX: ${LLAMA_ARG_LOG_PREFIX:-true}
+
+      # Include timestamps in llama.cpp log messages.
       LLAMA_ARG_LOG_TIMESTAMPS: ${LLAMA_ARG_LOG_TIMESTAMPS:-true}
+
+      # Log color handling: auto, on or off.
       LLAMA_ARG_LOG_COLORS: ${LLAMA_ARG_LOG_COLORS:-auto}
 
       # false is required for the first run so the GGUF can be downloaded.
