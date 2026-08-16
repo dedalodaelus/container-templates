@@ -71,6 +71,10 @@ services:
       # i7-6700: start with the four physical cores.
       LLAMA_ARG_THREADS: ${LLAMA_ARG_THREADS:-4}
 
+      # Number of CPU threads used for prompt and batch processing.
+      # This can be higher than LLAMA_ARG_THREADS to improve prompt evaluation performance.
+      LLAMA_ARG_THREADS_BATCH: ${LLAMA_ARG_THREADS_BATCH:-4}
+
       # Logical batch size.
       LLAMA_ARG_BATCH: ${LLAMA_ARG_BATCH:-1024}
 
@@ -215,6 +219,12 @@ services:
 
       # false is required for the first run so the GGUF can be downloaded.
       LLAMA_ARG_OFFLINE: ${LLAMA_ARG_OFFLINE:-false}
+
+    command:
+      # Number of CPU threads used for prompt and batch processing.
+      # Can be higher than the generation thread count.
+      - --threads-batch
+      - ${LLAMA_THREADS_BATCH:-8}
 
     ports:
       - target: 8080
