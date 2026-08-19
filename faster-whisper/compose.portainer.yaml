@@ -2,11 +2,10 @@
 services:
   faster-whisper:
     # Use the image previously built on this Docker host.
-    # image: local/faster-whisper:3.6.0-gpu-hass
-    image: lscr.io/linuxserver/faster-whisper:3.6.0-gpu
+    image: local/faster-whisper:3.6.0-gpu-hass
 
     # Never try to pull this image from a remote registry.
-    # pull_policy: never
+    pull_policy: never
 
     container_name: faster-whisper
 
