@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Always build the image locally instead of trying to pull it from a registry.
+    pull_policy: build
 
     image: local/faster-whisper:3.6.0-gpu-hass
     container_name: faster-whisper
