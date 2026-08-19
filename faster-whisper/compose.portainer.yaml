@@ -16,7 +16,7 @@ services:
 
       # Whisper model and decoding settings.
       WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
-      WHISPER_BEAM: "${WHISPER_BEAM:-3}
+      WHISPER_BEAM: "${WHISPER_BEAM:-3}"
       WHISPER_LANG: es
 
       # Static context used to bias Whisper toward expected vocabulary.
