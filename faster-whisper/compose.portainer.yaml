@@ -1,0 +1,116 @@
+---
+services:
+  faster-whisper:
+    # Use the image previously built on this Docker host.
+    image: local/faster-whisper:3.6.0-gpu-hass
+
+    # Never try to pull this image from a remote registry.
+    pull_policy: never
+
+    container_name: faster-whisper
+
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Europe/Madrid
+
+      # Whisper model and decoding settings.
+      WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
+      WHISPER_BEAM: 3
+      WHISPER_LANG: es
+
+      # Static context used to bias Whisper toward expected vocabulary.
+      WHISPER_INITIAL_PROMPT: "${WHISPER_INITIAL_PROMPT}"
+
+      # Home Assistant connection used to fetch exposed entity names,
+      # aliases, areas and floors.
+      HASS_TOKEN: "${HASS_TOKEN}"
+      HASS_API: "${HASS_API}"
+
+      # Home Assistant vocabulary settings.
+      HASS_REFRESH_SECONDS: 60
+      HASS_PROMPT_MAX_TOKENS: 200
+      HASS_PROMPT_TIMEOUT: 1.0
+
+    ports:
+      - target: 10300
+        published: 10300
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - type: volume
+        source: faster-whisper-config
+        target: /config
+
+      - type: volume
+        source: faster-whisper-data
+        target: /data
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+
+    restart: unless-stopped
+
+
+  whisper-es-converter:
+    image: python:3.12-slim
+    container_name: whisper-es-converter
+
+    environment:
+      HF_HUB_CACHE: /hf-cache
+
+    volumes:
+      - type: volume
+        source: faster-whisper-config
+        target: /hf-cache
+
+      - type: volume
+        source: faster-whisper-data
+        target: /output
+
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        # Skip conversion if the model already exists.
+        if [ -f /output/whisper-large-v3-turbo-es-int8/model.bin ]; then
+          echo "The CTranslate2 model is already available."
+          exit 0
+        fi
+
+        # Install CPU-only PyTorch. The conversion process does not need the GPU.
+        python -m pip install --no-cache-dir \
+          --index-url https://download.pytorch.org/whl/cpu \
+          torch
+
+        # Install the dependencies required by the CTranslate2 converter.
+        python -m pip install --no-cache-dir \
+          ctranslate2==4.8.1 \
+          transformers==4.56.1 \
+          sentencepiece \
+          safetensors
+
+        # Convert the Spanish fine-tuned Whisper Large V3 Turbo model.
+        ct2-transformers-converter \
+          --model adriszmar/whisper-large-v3-turbo-es \
+          --output_dir /output/whisper-large-v3-turbo-es-int8 \
+          --copy_files tokenizer.json preprocessor_config.json \
+          --quantization int8_float16
+
+        # Verify that the conversion completed successfully.
+        test -f /output/whisper-large-v3-turbo-es-int8/model.bin
+        echo "Model conversion completed successfully."
+
+    restart: "no"
+
+
+volumes:
+  faster-whisper-config:
+  faster-whisper-data:
