@@ -1,82 +1,140 @@
 ---
 services:
   faster-whisper:
-    image: lscr.io/linuxserver/faster-whisper:3.5.0-gpu
+    # Build a small custom image based on LinuxServer Faster Whisper 3.6.0
+    # to add initial prompt and Home Assistant vocabulary support.
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: local/faster-whisper:3.6.0-gpu-hass
     container_name: faster-whisper
+
     environment:
       PUID: 1000
       PGID: 1000
-      TZ: ES
-      # WHISPER_MODEL: turbo
+      TZ: Europe/Madrid
+
+      # Whisper model and decoding settings.
       WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
-      # WHISPER_MODEL: tiny-int8
-      # WHISPER_MODEL: tiny-int8
-      # WHISPER_MODEL: tiny-int8
-      # WHISPER_MODEL: tiny-int8
       WHISPER_BEAM: 3
       WHISPER_LANG: es
-      #LOCAL_ONLY: #optional
+
+      # Static context used to bias Whisper toward expected vocabulary.
+      # Define the actual value as a Portainer stack environment variable.
+      WHISPER_INITIAL_PROMPT: "${WHISPER_INITIAL_PROMPT}"
+
+      # Home Assistant connection used to fetch exposed entity names,
+      # aliases, areas and floors.
+      # Define these values as Portainer stack environment variables.
+      HASS_TOKEN: "${HASS_TOKEN}"
+      HASS_API: "${HASS_API}"
+
+      # Refresh Home Assistant vocabulary periodically instead of querying
+      # Home Assistant for every transcription.
+      HASS_REFRESH_SECONDS: 60
+
+      # Maximum number of Home Assistant vocabulary tokens added to
+      # the Whisper prompt.
+      HASS_PROMPT_MAX_TOKENS: 200
+
+      # Maximum time in seconds to wait for a Home Assistant vocabulary update.
+      HASS_PROMPT_TIMEOUT: 1.0
+
+      # Uncomment to prevent Whisper from downloading models from the Internet.
+      # LOCAL_ONLY: "true"
+
     ports:
       - target: 10300
         published: 10300
         protocol: tcp
         mode: host
+
     volumes:
+      # Faster Whisper configuration and Hugging Face cache.
       - type: volume
         source: faster-whisper-config
         target: /config
+
+      # Stores the converted Spanish Whisper model.
       - type: volume
         source: faster-whisper-data
         target: /data
+
+    # Make the NVIDIA GPU available to Faster Whisper.
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: all
-              capabilities: [gpu]
+              capabilities:
+                - gpu
+
     restart: unless-stopped
+
+
   whisper-es-converter:
+    # One-shot helper container used to convert the Hugging Face model
+    # to CTranslate2 int8_float16 format.
     image: python:3.12-slim
     container_name: whisper-es-converter
+
     environment:
+      # Keep downloaded Hugging Face files in the persistent config volume.
       HF_HUB_CACHE: /hf-cache
+
     volumes:
+      # Persistent Hugging Face download/cache directory.
       - type: volume
         source: faster-whisper-config
         target: /hf-cache
+
+      # Destination for the converted CTranslate2 model.
       - type: volume
         source: faster-whisper-data
         target: /output
+
     command:
       - /bin/sh
       - -ec
       - |
+        # Skip conversion if the model already exists.
         if [ -f /output/whisper-large-v3-turbo-es-int8/model.bin ]; then
-          echo "El modelo CTranslate2 ya está convertido."
+          echo "The CTranslate2 model is already available."
           exit 0
         fi
 
+        # Install CPU-only PyTorch. The conversion process does not need the GPU.
         python -m pip install --no-cache-dir \
           --index-url https://download.pytorch.org/whl/cpu \
           torch
 
+        # Install the dependencies required by the CTranslate2 converter.
         python -m pip install --no-cache-dir \
           ctranslate2==4.8.1 \
           transformers==4.56.1 \
           sentencepiece \
           safetensors
 
+        # Convert the Spanish fine-tuned Whisper Large V3 Turbo model.
         ct2-transformers-converter \
           --model adriszmar/whisper-large-v3-turbo-es \
           --output_dir /output/whisper-large-v3-turbo-es-int8 \
           --copy_files tokenizer.json preprocessor_config.json \
           --quantization int8_float16
 
+        # Verify that the conversion completed successfully.
         test -f /output/whisper-large-v3-turbo-es-int8/model.bin
-        echo "Conversión terminada correctamente."
+        echo "Model conversion completed successfully."
+
+    # This container only needs to run when the converted model is missing.
     restart: "no"
+
+
 volumes:
+  # Persistent Faster Whisper configuration and model download cache.
   faster-whisper-config:
 
+  # Persistent converted Whisper model storage.
   faster-whisper-data:

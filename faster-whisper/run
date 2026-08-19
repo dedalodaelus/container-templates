@@ -1,0 +1,42 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+EXTRA_ARGS=()
+
+# Add a static initial prompt to bias Whisper toward expected vocabulary
+if [[ -n "${WHISPER_INITIAL_PROMPT:-}" ]]; then
+    EXTRA_ARGS+=(
+        --initial-prompt
+        "${WHISPER_INITIAL_PROMPT}"
+    )
+fi
+
+# Fetch dynamic vocabulary from Home Assistant
+if [[ -n "${HASS_TOKEN:-}" ]]; then
+    EXTRA_ARGS+=(
+        --hass-token
+        "${HASS_TOKEN}"
+        --hass-api
+        "${HASS_API:-http://homeassistant.local:8123/api}"
+        --hass-refresh-seconds
+        "${HASS_REFRESH_SECONDS:-60}"
+        --hass-prompt-max-tokens
+        "${HASS_PROMPT_MAX_TOKENS:-200}"
+        --hass-prompt-timeout
+        "${HASS_PROMPT_TIMEOUT:-1.0}"
+    )
+fi
+
+# Start Wyoming Faster Whisper with the configured model and optional context
+exec \
+    s6-notifyoncheck -d -n 300 -w 1000 -c "nc -z localhost 10300" \
+    s6-setuidgid abc python3 -m wyoming_faster_whisper \
+    --uri 'tcp://0.0.0.0:10300' \
+    --model "${WHISPER_MODEL:-auto}" \
+    --beam-size "${WHISPER_BEAM:-1}" \
+    --language "${WHISPER_LANG:-auto}" \
+    --data-dir /config \
+    --download-dir /config \
+    "${EXTRA_ARGS[@]}" \
+    ${DEBUG:+--debug} \
+    ${LOCAL_ONLY:+--local-files-only}
