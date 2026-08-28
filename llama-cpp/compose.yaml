@@ -191,6 +191,12 @@ services:
       # Preserve normal assistant-prefill behavior.
       LLAMA_ARG_PREFILL_ASSISTANT: ${LLAMA_ARG_PREFILL_ASSISTANT:-true}
 
+      #token budget for thinking:
+      # -1 for unrestricted,
+      # 0 for immediate end,
+      # N>0 for token budget
+      LLAMA_ARG_THINK_BUDGET: ${LLAMA_ARG_THINK_BUDGET:-1}
+
 
       # -----------------------------------------------------------------------
       # Logging
