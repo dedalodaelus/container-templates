@@ -2,6 +2,7 @@
 services:
   llama-cpp:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda13
+    cpuset: "0-3"
     container_name: llama-cpp
 
     environment:
