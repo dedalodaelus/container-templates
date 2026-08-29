@@ -195,7 +195,10 @@ services:
       # -1 for unrestricted,
       # 0 for immediate end,
       # N>0 for token budget
-      LLAMA_ARG_THINK_BUDGET: ${LLAMA_ARG_THINK_BUDGET:-1}
+      LLAMA_ARG_THINK_BUDGET: ${LLAMA_ARG_THINK_BUDGET:--1}
+      
+      # omma-separated list of types of speculative decoding to use (default: none)
+      LLAMA_ARG_SPEC_TYPE: ${LLAMA_ARG_SPEC_TYPE:-none}
 
 
       # -----------------------------------------------------------------------
