@@ -1,0 +1,60 @@
+---
+services:
+  faster-whisper:
+    # Use the image previously built on this Docker host.
+    image: local/faster-whisper:3.6.0-gpu-hass
+
+    # Never try to pull this image from a remote registry.
+    pull_policy: never
+
+    container_name: faster-whisper
+
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Europe/Madrid
+
+      # Whisper model and decoding settings.
+      WHISPER_MODEL: /data/whisper-large-v3-turbo-es-int8
+      WHISPER_BEAM: "${WHISPER_BEAM:-3}"
+      WHISPER_LANG: es
+
+      # Static context used to bias Whisper toward expected vocabulary.
+      WHISPER_INITIAL_PROMPT: "${WHISPER_INITIAL_PROMPT}"
+
+      # Home Assistant connection used to fetch exposed entity names,
+      # aliases, areas and floors.
+      HASS_TOKEN: "${HASS_TOKEN}"
+      HASS_API: "${HASS_API}"
+
+      # Home Assistant vocabulary settings.
+      HASS_REFRESH_SECONDS: 60
+      HASS_PROMPT_MAX_TOKENS: 200
+      HASS_PROMPT_TIMEOUT: 1.0
+
+    ports:
+      - target: 10300
+        published: 10300
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - type: volume
+        source: faster-whisper-config
+        target: /config
+
+      - type: volume
+        source: faster-whisper-data
+        target: /data
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+
+    restart: unless-stopped
+
