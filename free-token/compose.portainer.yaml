@@ -142,5 +142,7 @@ services:
       - --num-tokens
       - ${NUM_TOKENS:-8192}
 
+      - --disable-moe-prefill-overlap
+
 volumes:
   free-token-cache:
