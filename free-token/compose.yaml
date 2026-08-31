@@ -1,5 +1,9 @@
 services:
   freetoken:
+    extends:
+      file: compose.base.yaml
+      service: freetoken
+
     build:
       context: .
       dockerfile: Dockerfile
@@ -7,76 +11,6 @@ services:
         CUDA_VERSION: ${CUDA_VERSION:-13.0.3}
 
     image: ${FREETOKEN_IMAGE:-freetoken-local:latest}
-    container_name: ${CONTAINER_NAME:-freetoken}
-    restart: ${RESTART_POLICY:-unless-stopped}
-
-    ports:
-      - target: ${FREETOKEN_PORT:-1919}
-        published: ${FREETOKEN_PORT:-1919}
-        protocol: tcp
-        mode: host
-
-    volumes:
-      - type: volume
-        source: free-token-cache
-        target: /cache
-
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-    environment:
-      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
-      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
-
-      XDG_CACHE_HOME: /cache
-      HF_HOME: /cache/huggingface
-      TRITON_CACHE_DIR: /cache/triton
-
-    mem_limit: ${MEM_LIMIT:-20g}
-    shm_size: ${SHM_SIZE:-2gb}
-
-    command:
-      - serve
-
-      - --model
-      - ${MODEL:-openai/gpt-oss-20b}
-
-      - --served-model-name
-      - ${SERVED_MODEL_NAME:-gpt-oss-20b}
-
-      - --host
-      - ${FREETOKEN_HOST:-0.0.0.0}
-
-      - --port
-      - ${FREETOKEN_PORT:-1919}
-
-      - --max-running-requests
-      - ${MAX_RUNNING_REQUESTS:-1}
-
-      - --max-seq-len-override
-      - ${MAX_SEQ_LEN:-16384}
-
-      - --max-output-tokens
-      - ${MAX_OUTPUT_TOKENS:-1024}
-
-      - --memory-ratio
-      - ${MEMORY_RATIO:-0.75}
-
-      - --moe-backend
-      - ${MOE_BACKEND:-offload}
-
-      - --kv-reserve-tokens
-      - ${KV_RESERVE_TOKENS:-16384}
-
-      - --cache-type
-      - ${CACHE_TYPE:-radix}
-
-      - --enable-cache-report
 
 volumes:
   free-token-cache:

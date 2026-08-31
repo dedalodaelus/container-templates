@@ -1,0 +1,147 @@
+services:
+  freetoken-bench:
+    restart: "no"
+
+    env_file:
+      - stack.env
+
+    volumes:
+      - type: volume
+        source: free-token-cache
+        target: /cache
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
+      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+
+      XDG_CACHE_HOME: /cache
+      HF_HOME: /cache/huggingface
+      TRITON_CACHE_DIR: /cache/triton
+
+    entrypoint: ["/bin/sh", "-c"]
+
+    command:
+      - |
+        set -eu
+
+        PROFILE="/cache/freetoken/benchbw.json"
+
+        case "$${BENCHMARK_MODE:-if-missing}" in
+          always)
+            echo "Running FreeToken hardware benchmark..."
+            exec ft bench bw --model "$${MODEL:-openai/gpt-oss-20b}"
+            ;;
+
+          if-missing)
+            if [ ! -s "$$PROFILE" ]; then
+              echo "No benchmark profile found. Generating..."
+              exec ft bench bw --model "$${MODEL:-openai/gpt-oss-20b}"
+            fi
+
+            echo "Benchmark profile already exists:"
+            echo "$$PROFILE"
+            ;;
+
+          never)
+            echo "Benchmark disabled."
+            ;;
+
+          *)
+            echo "Invalid BENCHMARK_MODE=$${BENCHMARK_MODE}" >&2
+            exit 1
+            ;;
+        esac
+
+
+  freetoken:
+    container_name: ${CONTAINER_NAME:-freetoken}
+
+    restart: ${RESTART_POLICY:-unless-stopped}
+
+    depends_on:
+      freetoken-bench:
+        condition: service_completed_successfully
+
+    env_file:
+      - stack.env
+
+    ports:
+      - target: ${FREETOKEN_PORT:-1919}
+        published: ${FREETOKEN_PORT:-1919}
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - type: volume
+        source: free-token-cache
+        target: /cache
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
+      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+
+      XDG_CACHE_HOME: /cache
+      HF_HOME: /cache/huggingface
+      TRITON_CACHE_DIR: /cache/triton
+
+    mem_limit: ${MEM_LIMIT:-20g}
+    shm_size: ${SHM_SIZE:-2gb}
+
+    command:
+      - serve
+
+      - --model
+      - ${MODEL:-openai/gpt-oss-20b}
+
+      - --served-model-name
+      - ${SERVED_MODEL_NAME:-gpt-oss-20b}
+
+      - --host
+      - ${FREETOKEN_HOST:-0.0.0.0}
+
+      - --port
+      - ${FREETOKEN_PORT:-1919}
+
+      - --max-running-requests
+      - ${MAX_RUNNING_REQUESTS:-1}
+
+      - --max-seq-len-override
+      - ${MAX_SEQ_LEN:-16384}
+
+      - --max-output-tokens
+      - ${MAX_OUTPUT_TOKENS:-1024}
+
+      - --memory-ratio
+      - ${MEMORY_RATIO:-0.75}
+
+      - --moe-backend
+      - ${MOE_BACKEND:-offload}
+
+      - --moe-cache-size
+      - ${MOE_CACHE_SIZE:-32}
+
+      - --num-tokens
+      - ${NUM_TOKENS:-8192}
+
+      - --disable-moe-prefill-overlap
+
+      - --cache-type
+      - ${CACHE_TYPE:-radix}
+
+      - --enable-cache-report
