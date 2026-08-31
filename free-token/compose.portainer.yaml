@@ -13,7 +13,9 @@ services:
       service: freetoken
 
     image: ${FREETOKEN_IMAGE}
-
+    depends_on:
+      freetoken-bench:
+        condition: service_completed_successfully
 
 volumes:
   free-token-cache:

@@ -4,10 +4,6 @@ services:
 
     restart: ${RESTART_POLICY:-unless-stopped}
 
-    depends_on:
-      freetoken-bench:
-        condition: service_completed_successfully
-
     env_file:
       - stack.env
 
