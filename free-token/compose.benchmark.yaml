@@ -1,5 +1,6 @@
 services:
   freetoken-bench:
+    image: ${FREETOKEN_IMAGE}
     restart: "no"
 
     env_file:
