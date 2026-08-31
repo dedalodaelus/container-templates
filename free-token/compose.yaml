@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        CUDA_IMAGE: ${CUDA_IMAGE:-nvidia/cuda:13.0.3-devel-ubuntu24.04}
+        CUDA_VERSION: ${CUDA_VERSION:-13.0.3}
 
     image: ${FREETOKEN_IMAGE:-freetoken-local:latest}
     container_name: ${CONTAINER_NAME:-freetoken}
