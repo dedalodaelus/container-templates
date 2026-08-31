@@ -1,7 +1,7 @@
 services:
   freetoken-bench:
     extends:
-      file: compose.base.yaml
+      file: compose.benchmark.yaml
       service: freetoken-bench
 
     image: ${FREETOKEN_IMAGE}
