@@ -55,7 +55,8 @@ RUN mkdir -p /cache
 EXPOSE 1919
 
 ENTRYPOINT ["ft"]
-CMD ["serve"]ARG CUDA_IMAGE=nvidia/cuda:13.0.3-devel-ubuntu24.04
+CMD ["serve"]
+ARG CUDA_IMAGE=nvidia/cuda:13.0.3-devel-ubuntu24.04
 FROM ${CUDA_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \
