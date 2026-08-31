@@ -37,13 +37,13 @@ services:
         case "$${BENCHMARK_MODE:-if-missing}" in
           always)
             echo "Running FreeToken hardware benchmark..."
-            exec ft bench bw --model "$${MODEL:-openai/gpt-oss-20b}"
+            exec ft bench bw --model "$${SERVED_MODEL_NAME:-gpt-oss-20b}"
             ;;
 
           if-missing)
             if [ ! -s "$$PROFILE" ]; then
               echo "No benchmark profile found. Generating..."
-              exec ft bench bw --model "$${MODEL:-openai/gpt-oss-20b}"
+              exec ft bench bw --model "$${SERVED_MODEL_NAME:-gpt-oss-20b}"
             fi
 
             echo "Benchmark profile already exists:"
