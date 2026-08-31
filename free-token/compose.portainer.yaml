@@ -136,5 +136,11 @@ services:
 
       - --enable-cache-report
 
+      - --moe-cache-size
+      - ${MOE_CACHE_SIZE:-32}
+
+      - --num-tokens
+      - ${NUM_TOKENS:-8192}
+
 volumes:
   free-token-cache:
