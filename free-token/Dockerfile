@@ -71,6 +71,7 @@ RUN apt-get update && \
         python3 \
         python3-venv \
         python3-pip \
+        python3-dev \
         ca-certificates \
         curl \
         git \
