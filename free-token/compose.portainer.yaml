@@ -4,7 +4,7 @@ services:
       file: compose.benchmark.yaml
       service: freetoken-bench
 
-    image: ${FREETOKEN_IMAGE}
+    image: ${FREETOKEN_IMAGE:-freetoken-local:latest}
 
 
   freetoken:
@@ -12,7 +12,7 @@ services:
       file: compose.base.yaml
       service: freetoken
 
-    image: ${FREETOKEN_IMAGE}
+    image: ${FREETOKEN_IMAGE:-freetoken-local:latest}
     depends_on:
       freetoken-bench:
         condition: service_completed_successfully
