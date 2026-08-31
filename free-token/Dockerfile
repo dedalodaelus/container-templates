@@ -84,6 +84,8 @@ RUN python3 -m venv /opt/venv && \
         --python /opt/venv/bin/python \
         "freetoken[accel]"
 
+COPY --from=builder /opt/venv /opt/venv
+
 RUN mkdir -p /cache
 
 EXPOSE 1919
