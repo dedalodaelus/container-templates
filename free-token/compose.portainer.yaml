@@ -38,13 +38,13 @@ services:
         case "$${BENCHMARK_MODE:-if-missing}" in
           always)
             echo "Running FreeToken hardware benchmark..."
-            exec ft bench bw --model "$${MODEL}"
+            exec ft bench bw --model "$${SERVED_MODEL_NAME}"
             ;;
 
           if-missing)
             if [ ! -s "$$PROFILE" ]; then
               echo "No benchmark profile found. Generating one..."
-              exec ft bench bw --model "$${MODEL}"
+              exec ft bench bw --model "$${SERVED_MODEL_NAME}"
             fi
 
             echo "Benchmark profile already exists: $$PROFILE"
