@@ -101,6 +101,11 @@ services:
       LLAMA_ARG_PREFILL_ASSISTANT: ${LLAMA_ARG_PREFILL_ASSISTANT:-true}
       LLAMA_ARG_SPEC_TYPE: ${LLAMA_ARG_SPEC_TYPE:-none}
 
+      # Sampling
+      LLAMA_ARG_TOP_K: ${LLAMA_ARG_TOP_K:-40}
+      LLAMA_ARG_MIN_P: ${LLAMA_ARG_MIN_P:-0.05}
+      LLAMA_ARG_REPEAT_PENALTY: ${LLAMA_ARG_REPEAT_PENALTY:-1.0}
+
       # -----------------------------------------------------------------------
       # Logging
       # -----------------------------------------------------------------------
@@ -110,6 +115,10 @@ services:
       LLAMA_ARG_LOG_TIMESTAMPS: ${LLAMA_ARG_LOG_TIMESTAMPS:-true}
       LLAMA_ARG_LOG_COLORS: ${LLAMA_ARG_LOG_COLORS:-auto}
       LLAMA_ARG_OFFLINE: ${LLAMA_ARG_OFFLINE:-false}
+
+    command:
+      - --threads-batch
+      - ${LLAMA_THREADS_BATCH:-8}
 
     ports:
       - target: ${LLAMA_ARG_PORT:-8080}
