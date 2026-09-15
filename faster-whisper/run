@@ -39,7 +39,8 @@ exec \
     s6-setuidgid abc python3 -m wyoming_faster_whisper \
     --uri 'tcp://0.0.0.0:10300' \
     --device cuda \
-    --model "${WHISPER_MODEL:-auto}" \
+    --model "${WHISPER_MODEL:-rhasspy/faster-whisper-base-int8}" \
+    --compute-type "${WHISPER_COMPUTE_TYPE:-int8_float16}" \
     --beam-size "${WHISPER_BEAM:-1}" \
     --language "${WHISPER_LANG:-auto}" \
     --data-dir /config \
