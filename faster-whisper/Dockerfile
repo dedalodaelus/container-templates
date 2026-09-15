@@ -1,4 +1,4 @@
-FROM lscr.io/linuxserver/faster-whisper:3.6.0-gpu
+FROM lscr.io/linuxserver/faster-whisper:3.8.0-gpu
 
 # Required by the "hass" extra in wyoming-faster-whisper 3.6.0
 RUN /lsiopy/bin/pip install --no-cache-dir "aiohttp>=3.8,<4"
